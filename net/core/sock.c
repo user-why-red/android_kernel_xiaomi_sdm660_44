@@ -1420,17 +1420,6 @@ static void sk_prot_free(struct proto *prot, struct sock *sk)
 	module_put(owner);
 }
 
-#if IS_ENABLED(CONFIG_CGROUP_NET_PRIO)
-void sock_update_netprioidx(struct sock *sk)
-{
-	if (in_interrupt())
-		return;
-
-	sk->sk_cgrp_prioidx = task_netprioidx(current);
-}
-EXPORT_SYMBOL_GPL(sock_update_netprioidx);
-#endif
-
 /**
  *	sk_alloc - All socket objects are allocated here
  *	@net: the applicable net namespace
@@ -1459,8 +1448,9 @@ struct sock *sk_alloc(struct net *net, int family, gfp_t priority,
 		sock_net_set(sk, net);
 		atomic_set(&sk->sk_wmem_alloc, 1);
 
-		sock_update_classid(sk);
-		sock_update_netprioidx(sk);
+		sock_update_classid(&sk->sk_cgrp_data);
+		sock_update_netprioidx(&sk->sk_cgrp_data);
+		sk_tx_queue_clear(sk);
 	}
 
 	return sk;
@@ -2312,6 +2302,27 @@ int sock_no_mmap(struct file *file, struct socket *sock, struct vm_area_struct *
 	return -ENODEV;
 }
 EXPORT_SYMBOL(sock_no_mmap);
+
+/*
+ * When a file is received (via SCM_RIGHTS, etc), we must bump the
+ * various sock-based usage counts.
+ */
+void __receive_sock(struct file *file)
+{
+	struct socket *sock;
+	int error;
+
+	/*
+	 * The resulting value of "error" is ignored here since we only
+	 * need to take action when the file is a socket and testing
+	 * "sock" for NULL is sufficient.
+	 */
+	sock = sock_from_file(file, &error);
+	if (sock) {
+		sock_update_netprioidx(&sock->sk->sk_cgrp_data);
+		sock_update_classid(&sock->sk->sk_cgrp_data);
+	}
+}
 
 ssize_t sock_no_sendpage(struct socket *sock, struct page *page, int offset, size_t size, int flags)
 {
