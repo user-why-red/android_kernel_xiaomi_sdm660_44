@@ -453,7 +453,6 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
 	struct mwifiex_private *priv;
 	s32 i, j;
 
-	spin_lock_init(&adapter->mwifiex_lock);
 	spin_lock_init(&adapter->int_lock);
 	spin_lock_init(&adapter->main_proc_lock);
 	spin_lock_init(&adapter->mwifiex_cmd_lock);
@@ -710,11 +709,7 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
 
 	spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
 
-	spin_lock(&adapter->mwifiex_lock);
-
 	mwifiex_adapter_cleanup(adapter);
-
-	spin_unlock(&adapter->mwifiex_lock);
 
 	/* Notify completion */
 	ret = mwifiex_shutdown_fw_complete(adapter);
