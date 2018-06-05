@@ -4240,7 +4240,8 @@ static void mdss_mdp_wait_for_panel_on(struct mdss_panel_data *pdata)
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata =
 		container_of(pdata, typeof(*ctrl_pdata), panel_data);
 
-	wait_for_completion(&ctrl_pdata->wake_comp);
+	if (atomic_read(&ctrl_pdata->needs_wake))
+		wait_for_completion(&ctrl_pdata->wake_comp);
 }
 
 int mdss_mdp_ctl_intf_event(struct mdss_mdp_ctl *ctl, int event, void *arg,
