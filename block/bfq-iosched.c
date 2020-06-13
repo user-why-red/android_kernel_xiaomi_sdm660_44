@@ -2163,8 +2163,8 @@ bfq_merge_bfqqs(struct bfq_data *bfqd, struct bfq_io_cq *bic,
 	bfq_put_queue(bfqq);
 }
 
-static int bfq_allow_merge(struct request_queue *q, struct request *rq,
-			   struct bio *bio)
+static int bfq_allow_bio_merge(struct request_queue *q, struct request *rq,
+			       struct bio *bio)
 {
 	struct bfq_data *bfqd = q->elevator->elevator_data;
 	struct bfq_io_cq *bic;
@@ -2204,6 +2204,12 @@ static int bfq_allow_merge(struct request_queue *q, struct request *rq,
 	}
 
 	return bfqq == RQ_BFQQ(rq);
+}
+
+static int bfq_allow_rq_merge(struct request_queue *q, struct request *rq,
+			      struct request *next)
+{
+	return RQ_BFQQ(rq) == RQ_BFQQ(next);
 }
 
 /*
@@ -5268,7 +5274,8 @@ static struct elevator_type iosched_bfq = {
 #ifdef CONFIG_BFQ_GROUP_IOSCHED
 		.elevator_bio_merged_fn =	bfq_bio_merged,
 #endif
-		.elevator_allow_bio_merge_fn =	bfq_allow_merge,
+		.elevator_allow_bio_merge_fn =	bfq_allow_bio_merge,
+		.elevator_allow_rq_merge_fn =	bfq_allow_rq_merge,
 		.elevator_dispatch_fn =		bfq_dispatch_requests,
 		.elevator_add_req_fn =		bfq_insert_request,
 		.elevator_activate_req_fn =	bfq_activate_request,
