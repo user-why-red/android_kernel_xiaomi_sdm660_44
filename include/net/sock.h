@@ -59,7 +59,6 @@
 #include <linux/static_key.h>
 #include <linux/sched.h>
 #include <linux/wait.h>
-#include <linux/cgroup-defs.h>
 
 #include <linux/filter.h>
 #include <linux/rculist_nulls.h>
