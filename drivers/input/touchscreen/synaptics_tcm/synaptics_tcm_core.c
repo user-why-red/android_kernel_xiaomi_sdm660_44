@@ -1926,7 +1926,7 @@ static int syna_tcm_enable_irq(struct syna_tcm_hcd *tcm_hcd, bool en, bool ns)
 
 		if (irq_freed) {
 			retval = request_threaded_irq(tcm_hcd->irq, NULL,
-					syna_tcm_isr, bdata->irq_flags,
+					syna_tcm_isr, bdata->irq_flags | IRQF_PERF_CRITICAL | IRQF_NO_SUSPEND,
 					PLATFORM_DRIVER_NAME, tcm_hcd);
 			if (retval < 0) {
 				LOGE(tcm_hcd->pdev->dev.parent,
@@ -3596,17 +3596,17 @@ static int syna_tcm_probe(struct platform_device *pdev)
 
 	LOGV("INIT_WORK : syna_tcm_helper\n");
 	tcm_hcd->helper.workqueue =
-		create_singlethread_workqueue("syna_tcm_helper");
+		alloc_workqueue("syna_tcm_helper", WQ_HIGHPRI | WQ_UNBOUND, 0);
 	INIT_WORK(&tcm_hcd->helper.work, syna_tcm_helper_work);
 
 	LOGV("INIT_DELAYED_WORK : syna_tcm_watchdog\n");
 	tcm_hcd->watchdog.workqueue =
-		create_singlethread_workqueue("syna_tcm_watchdog");
+		alloc_workqueue("syna_tcm_watchdog", WQ_HIGHPRI | WQ_UNBOUND, 0);
 	INIT_DELAYED_WORK(&tcm_hcd->watchdog.work, syna_tcm_watchdog_work);
 
 	LOGV("INIT_DELAYED_WORK : syna_tcm_polling\n");
 	tcm_hcd->polling_workqueue =
-		create_singlethread_workqueue("syna_tcm_polling");
+		alloc_workqueue("syna_tcm_polling", WQ_HIGHPRI | WQ_UNBOUND, 0);
 	INIT_DELAYED_WORK(&tcm_hcd->polling_work, syna_tcm_polling_work);
 
 	/* add reset work by wanghan start */
@@ -3620,7 +3620,7 @@ static int syna_tcm_probe(struct platform_device *pdev)
 
 	LOGV("INIT_DELAYED_WORK : syna_tcm_glove\n");
 	tcm_hcd->glove.workqueue =
-		create_singlethread_workqueue("syna_tcm_glove");
+		alloc_workqueue("syna_tcm_glove", WQ_HIGHPRI | WQ_UNBOUND, 0);
 	INIT_DELAYED_WORK(&tcm_hcd->glove.work, syna_tcm_glove_work);
 
 	LOGV("enable interrupt\n");
