@@ -1012,7 +1012,14 @@ int mdss_first_set_feature(struct mdss_panel_data *pdata, int first_ce_state, in
 		pr_err("%s,not available\n",__func__);
 		return -1;
 	}
-	
+
+	return 0;
+	//Fixes sRGB reset after screen off/on
+	if(srgb_enabled == 1) {
+			srgb_state = 2;
+			first_srgb_state = 2;
+	}
+
 	if ((first_ce_state != -1) || (first_cabc_state != -1) || (first_srgb_state != -1) || (first_gamma_state != -1))
 		printk("%s,first_ce_state: %d,first_cabc_state: %d,first_srgb_state=%d,first_gamma_state=%d\n",__func__, first_ce_state,first_cabc_state,first_srgb_state,first_gamma_state);
 
