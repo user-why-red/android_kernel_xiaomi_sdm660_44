@@ -1238,17 +1238,14 @@ static int ep_create_wakeup_source(struct epitem *epi)
 	const char *name;
 	struct wakeup_source *ws;
 
-	take_dentry_name_snapshot(&n, epi->ffd.file->f_path.dentry);
 	if (!epi->ep->ws) {
-		char buf[64];
-		snprintf(buf, sizeof(buf), "eventpoll pid:%d file:%s", current->pid, name);
-		epi->ep->ws = wakeup_source_register(buf);
+		epi->ep->ws = wakeup_source_register("eventpoll");
 		if (!epi->ep->ws)
 			return -ENOMEM;
 	}
 
-	ws = wakeup_source_register(n.name);
-	release_dentry_name_snapshot(&n);
+	name = epi->ffd.file->f_path.dentry->d_name.name;
+	ws = wakeup_source_register(name);
 
 	if (!ws)
 		return -ENOMEM;
