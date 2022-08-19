@@ -37,7 +37,7 @@ do
 	then
 		build ${i} -oldcam -overclock
 
-                build ${i} -oldcam -overclock
+                build ${i} -newcam -overclock
 	fi
 done
 
