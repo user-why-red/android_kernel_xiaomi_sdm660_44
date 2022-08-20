@@ -12,7 +12,7 @@ export TOOLCHAIN=clang
 
 export DEVICES=whyred,tulip,lavender
 
-source helper
+source helper-qti
 
 gen_toolchain
 
@@ -22,10 +22,10 @@ START=$(date +"%s")
 
 for i in ${DEVICES//,/ }
 do
-	build ${i} -oldcam
+	build ${i} -qti-oldcam
 done
 
-send_msg "⏳ Start building Overclock Version | DEVICES: whyred - tulip"
+send_msg "⏳ Start building QTI Overclock Version | DEVICES: whyred - tulip"
 
 git apply ./oc.patch
 
@@ -33,7 +33,7 @@ for i in ${DEVICES//,/ }
 do
 	if [ $i == "whyred" ] || [ $i == "tulip" ]
 	then
-		build ${i} -oldcam -overclock
+		build ${i} -qti-oldcam -overclock
 	fi
 done
 
