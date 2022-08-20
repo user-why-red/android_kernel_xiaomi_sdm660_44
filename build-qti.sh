@@ -18,6 +18,8 @@ gen_toolchain
 
 send_msg "⏳ Start building ${KERNELNAME} | DEVICES: whyred - tulip - lavender"
 
+git apply ./qti.patch
+
 START=$(date +"%s")
 
 for i in ${DEVICES//,/ }
