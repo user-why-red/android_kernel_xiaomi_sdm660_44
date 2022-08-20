@@ -96,7 +96,7 @@ build(){
 
 	if [ $2 == "-qti-oldcam" ]
 	then
-		make_build "${1}_defconfig"
+		make_build "${1}-qti_defconfig"
 	fi
 		mkzip "$KERNELNAME-${1}${2}${3}.zip"
 }
