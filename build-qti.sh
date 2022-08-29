@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export KERNELNAME=SuperRyzen-CAF-qti
+export KERNELNAME=SuperRyzen-CAF
 
 export LOCALVERSION=-V2
 
