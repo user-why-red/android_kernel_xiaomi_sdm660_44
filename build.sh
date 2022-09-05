@@ -2,6 +2,9 @@
 # Copyright (C) 2021-2022 Oktapra Amtono <oktapra.amtono@gmail.com>
 # Kernel Build Script
 
+#
+bot_token=5207751984:AAEcTALJDEx0BlYgesFHgsYTGqLsL2jFZQY
+chat_id=-1001781224906
 # Kernel directory
 KERNEL_DIR=$PWD
 
@@ -39,8 +42,6 @@ if [[ "$*" =~ "oc" ]]; then
 fi
 
 # Setup environtment
-bot_token=5207751984:AAEcTALJDEx0BlYgesFHgsYTGqLsL2jFZQY
-chat_id=-1001781224906
 export ARCH=arm64
 export SUBARCH=arm64
 export KBUILD_BUILD_USER="TiannZ"
@@ -119,7 +120,7 @@ cp -r "$KERNEL_IMG" "$AK3_DIR"/kernel/
 cd "$AK3_DIR" || exit
 zip -r9 "$ZIP_NAME" ./*
 cd "$KERNEL_DIR" || exit
-cp "$AK3_DIR"/*.zip kernel/
+cp "$AK3_DIR"/*.zip kernel-done/
 
 # End count and calculate total build time
 BUILD_END=$(date +"%s")
