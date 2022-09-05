@@ -1,49 +1,138 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Copyright (C) 2021-2022 Oktapra Amtono <oktapra.amtono@gmail.com>
+# Kernel Build Script
 
-export KERNELNAME=SuperRyzen-CAF
+# Kernel directory
+KERNEL_DIR=$PWD
 
-export LOCALVERSION=-V2
+# Start counting
+BUILD_START=$(date +"%s")
 
-export KBUILD_BUILD_USER=Tiannn
+# Name and version of kernel
+KERNEL_NAME="SuperRyzen-CAF"
+KERNEL_VERSION="v2"
 
-export KBUILD_BUILD_HOST=Zyc
+# Device name
+if [[ "$*" =~ "lavender" ]]; then
+    DEVICE="lavender"
+    export LOCALVERSION="_$KERNEL_VERSION"
+elif [[ "$*" =~ "tulip" ]]; then
+    DEVICE="tulip"
+    export LOCALVERSION="_$KERNEL_VERSION"
+elif [[ "$*" =~ "whyred" ]]; then
+    DEVICE="whyred"
+    export LOCALVERSION="_$KERNEL_VERSION"
+fi
 
-export TOOLCHAIN=clang
+# Blob version
+if [[ "$*" =~ "newcam" ]]; then
+    CONFIGVERSION="newcam"
+elif [[ "$*" =~ "oldcam" ]]; then
+    CONFIGVERSION="oldcam"
+elif [[ "$*" =~ "qtihaptics" ]]; then
+    CONFIGVERSION="qtihaptics"
+fi
 
-export DEVICES=whyred,tulip,lavender
+# Export localversion for OC variant
+if [[ "$*" =~ "oc" ]]; then
+    export LOCALVERSION="_$KERNEL_VERSION-OC"
+fi
 
-source helper
+# Setup environtment
+bot_token=5207751984:AAEcTALJDEx0BlYgesFHgsYTGqLsL2jFZQY
+chat_id=-1001781224906
+export ARCH=arm64
+export SUBARCH=arm64
+export KBUILD_BUILD_USER="TiannZ"
+export KBUILD_BUILD_HOST="Mob"
+AK3_DIR=$KERNEL_DIR/ak3-$DEVICE
+KERNEL_IMG=$KERNEL_DIR/out/arch/arm64/boot/Image.gz
+ZIP_NAME="$KERNEL_NAME"_"$DEVICE""$LOCALVERSION"_"$CONFIGVERSION".zip
 
-gen_toolchain
+# Setup toolchain
+if [[ "$*" =~ "clang" ]]; then
+    CLANG_DIR="$KERNEL_DIR/clang"
+    export PATH="$KERNEL_DIR/clang/bin:$PATH"
+    CLGV="$("$CLANG_DIR"/bin/clang --version | head -n 1)"
+    BINV="$("$CLANG_DIR"/bin/ld --version | head -n 1)"
+    LLDV="$("$CLANG_DIR"/bin/ld.lld --version | head -n 1)"
+    export KBUILD_COMPILER_STRING="$CLGV - $BINV - $LLDV"
+elif [[ "$*" =~ "gcc" ]]; then
+    GCC_DIR="$KERNEL_DIR/arm64"
+    GCCV="$("$GCC_DIR"/bin/aarch64-elf-gcc --version | head -n 1)"
+    BINV="$("$GCC_DIR"/bin/aarch64-elf-ld --version | head -n 1)"
+    LLDV="$("$GCC_DIR"/bin/aarch64-elf-ld.lld --version | head -n 1)"
+    export KBUILD_COMPILER_STRING="$GCCV - $BINV - $LLDV"
+fi
 
-send_msg "⏳ Start building ${KERNELNAME} | DEVICES: whyred - tulip - lavender"
+# Telegram setup
+push_message() {
+    curl -s -X POST \
+        https://api.telegram.org/bot"{$bot_token}"/sendMessage \
+        -d chat_id="${chat_id}" \
+        -d text="$1" \
+        -d "parse_mode=html" \
+        -d "disable_web_page_preview=true"
+}
 
-START=$(date +"%s")
+push_document() {
+    curl -s -X POST \
+        https://api.telegram.org/bot"{$TG_BOT_TOKEN}"/sendDocument \
+        -F chat_id="${chat_id}" \
+        -F document=@"$1" \
+        -F caption="$2" \
+        -F "parse_mode=html" \
+        -F "disable_web_page_preview=true"
+}
 
-for i in ${DEVICES//,/ }
-do
-	build ${i} -oldcam
+# Export defconfig
+make O=out super-"$DEVICE"-"$CONFIGVERSION"_defconfig
 
-        build ${i} -newcam
-done
+# Enable QTI haptics for all build
+scripts/config --file out/.config -e CONFIG_INPUT_QTI_HAPTICS
 
-send_msg "⏳ Start building Overclock Version | DEVICES: whyred - tulip"
+# Start compile
+if [[ "$*" =~ "clang" ]]; then
+    make -j"$(nproc --all)" O=out \
+        CC=clang \
+        AR=llvm-ar \
+        NM=llvm-nm \
+        OBJCOPY=llvm-objcopy \
+        OBJDUMP=llvm-objdump \
+        STRIP=llvm-strip \
+        CROSS_COMPILE=aarch64-linux-gnu- \
+        CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+elif [[ "$*" =~ "gcc" ]]; then
+    export CROSS_COMPILE="$KERNEL_DIR/arm64/bin/aarch64-elf-"
+    export CROSS_COMPILE_ARM32="$KERNEL_DIR/arm32/bin/arm-eabi-"
+    make -j"$(nproc --all)" O=out ARCH=arm64
+fi
 
-git apply ./oc.patch
+# Push message if build error
+if ! [ -a "$KERNEL_IMG" ]; then
+    push_message "<b>Failed building kernel for <code>$DEVICE-$CONFIGVERSION</code> Please fix it...!</b>"
+    exit 1
+fi
 
-for i in ${DEVICES//,/ }
-do
-	if [ $i == "whyred" ] || [ $i == "tulip" ]
-	then
-		build ${i} -oldcam -overclock
+# Make zip
+cp -r "$KERNEL_IMG" "$AK3_DIR"/kernel/
+cd "$AK3_DIR" || exit
+zip -r9 "$ZIP_NAME" ./*
+cd "$KERNEL_DIR" || exit
+cp "$AK3_DIR"/*.zip kernel/
 
-                build ${i} -newcam -overclock
-	fi
-done
+# End count and calculate total build time
+BUILD_END=$(date +"%s")
+DIFF=$((BUILD_END - BUILD_START))
 
-END=$(date +"%s")
+# Push kernel to telegram
+push_document "$AK3_DIR/$ZIP_NAME" "
+<b>device :</b> <code>$DEVICE</code>
+<b>kernel version :</b> <code>$KERNEL_VERSION</code>
+<b>blob version :</b> <code>$CONFIGVERSION</code>
+<b>md5 checksum :</b> <code>$(md5sum "$AK3_DIR/$ZIP_NAME" | cut -d' ' -f1)</code>
+<b>build time :</b> <code>$(("$DIFF" / 60)) minute, $(("$DIFF" % 60)) second</code>"
 
-DIFF=$(( END - START ))
-
-send_msg "✅ Build completed in $((DIFF / 60))m $((DIFF % 60))s | Linux version : $(make kernelversion) | Last commit: $(git log --pretty=format:'%s' -5)"
-
+rm -rf out/arch/arm64/boot/
+rm -rf out/.version
+rm -rf "$AK3_DIR"/*.zip

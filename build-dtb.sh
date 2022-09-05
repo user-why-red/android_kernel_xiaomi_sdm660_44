@@ -59,8 +59,8 @@ if [[ "$*" =~ "clang" ]]; then
         CROSS_COMPILE=aarch64-linux-gnu- \
         CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 elif [[ "$*" =~ "gcc" ]]; then
-    export CROSS_COMPILE="$KERNEL_DIR/arm64/bin/aarch64-elf-"
-    export CROSS_COMPILE_ARM32="$KERNEL_DIR/arm32/bin/arm-eabi-"
+    export CROSS_COMPILE="$KERNEL_DIR/arm64/bin/aarch64-linux-gnu-"
+    export CROSS_COMPILE_ARM32="$KERNEL_DIR/arm32/bin/arm-linux-gnueabi-"
     make -j"$(nproc --all)" O=out ARCH=arm64
 fi
 
