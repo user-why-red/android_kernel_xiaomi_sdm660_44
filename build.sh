@@ -77,7 +77,7 @@ push_message() {
 
 push_document() {
     curl -s -X POST \
-        https://api.telegram.org/bot"{$TG_BOT_TOKEN}"/sendDocument \
+        https://api.telegram.org/bot"{$bot_token}"/sendDocument \
         -F chat_id="${chat_id}" \
         -F document=@"$1" \
         -F caption="$2" \
