@@ -35,6 +35,8 @@ if [[ "$*" =~ "newcam" ]]; then
     CONFIGVERSION="newcam"
 elif [[ "$*" =~ "oldcam" ]]; then
     CONFIGVERSION="oldcam"
+elif [[ "$*" =~ "tencam" ]]; then
+    CONFIGVERSION="tencam"
 elif [[ "$*" =~ "qtihaptics" ]]; then
     CONFIGVERSION="qtihaptics"
 fi
