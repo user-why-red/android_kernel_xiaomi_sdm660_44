@@ -4,12 +4,14 @@
 
 # 
 chat_id=-1001781224906
-bot_token=5207751984:AAEcTALJDEx0BlYgesFHgsYTGqLsL2jFZQY
+bot_token=5207751984:AAFzbTT208TwfDNHBfkugTP3PqYZLw5FjU0
 # Kernel directory
 KERNEL_DIR=$PWD
 
 # Device name
-if [[ "$*" =~ "lavender" ]]; then
+if [[ "$*" =~ "a26x" ]]; then
+    DEVICE="a26x"
+elif [[ "$*" =~ "lavender" ]]; then
     DEVICE="lavender"
 elif [[ "$*" =~ "tulip" ]]; then
     DEVICE="tulip"

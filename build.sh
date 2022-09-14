@@ -3,7 +3,7 @@
 # Kernel Build Script
 
 #
-bot_token=5207751984:AAEcTALJDEx0BlYgesFHgsYTGqLsL2jFZQY
+bot_token=5207751984:AAFzbTT208TwfDNHBfkugTP3PqYZLw5FjU0
 chat_id=-1001781224906
 # Kernel directory
 KERNEL_DIR=$PWD
@@ -13,10 +13,13 @@ BUILD_START=$(date +"%s")
 
 # Name and version of kernel
 KERNEL_NAME="SuperRyzen-CAF"
-KERNEL_VERSION="v2"
+KERNEL_VERSION="v3"
 
 # Device name
-if [[ "$*" =~ "lavender" ]]; then
+if [[ "$*" =~ "a26x" ]]; then
+    DEVICE="a26x"
+    export LOCALVERSION="_$KERNEL_VERSION"
+elif [[ "$*" =~ "lavender" ]]; then
     DEVICE="lavender"
     export LOCALVERSION="_$KERNEL_VERSION"
 elif [[ "$*" =~ "tulip" ]]; then

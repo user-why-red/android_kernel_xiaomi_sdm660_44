@@ -20,6 +20,7 @@ fi
 git clone --depth=1 https://github.com/TianWalkzzMiku/AnyKernel3.git -b lavender-dtb ak3-lavender
 git clone --depth=1 https://github.com/TianWalkzzMiku/AnyKernel3.git -b whyred-dtb ak3-whyred
 git clone --depth=1 https://github.com/TianWalkzzMiku/AnyKernel3.git -b tulip-dtb ak3-tulip
+git clone --depth=1 https://github.com/TianWalkzzMiku/AnyKernel3.git -b a26x-dtb ak3-a26x
 
 # Telegram setup
 push_message() {
