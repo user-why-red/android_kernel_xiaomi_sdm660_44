@@ -1,0 +1,46 @@
+version: 2.1
+jobs:
+  build:
+    docker:
+      - image: okta10/docker:ubuntu
+    steps:
+      - run:
+          name: Building SuperRyzen Kernel
+          command: |
+            wget https://raw.githubusercontent.com/TianWalkzzMiku/SRyzen-CAF/caf/build-start.sh
+            bash doStart.sh stable clang
+            cd kernel
+            wget https://raw.githubusercontent.com/TianWalkzzMiku/SRyzen-CAF/caf/build-dtb.sh
+            bash doBuild_dtb.sh a26x clang qpnp
+            bash doBuild_dtb.sh lavender clang qpnp
+            bash doBuild_dtb.sh tulip clang qpnp
+            bash doBuild_dtb.sh whyred clang qpnp
+            git apply qti.patch
+            bash doBuild_dtb.sh a26x clang qti
+            bash doBuild_dtb.sh lavender clang qti
+            bash doBuild_dtb.sh tulip clang qti
+            bash doBuild_dtb.sh whyred clang qti
+            git restore .
+            wget https://raw.githubusercontent.com/TianWalkzzMiku/SRyzen-CAF/caf/build.sh
+            bash doBuild.sh a26x newcam clang
+            bash doBuild.sh a26x oldcam clang
+            bash doBuild.sh a26x tencam clang
+            bash doBuild.sh lavender newcam clang
+            bash doBuild.sh lavender oldcam clang
+            bash doBuild.sh tulip newcam clang
+            bash doBuild.sh tulip oldcam clang
+            bash doBuild.sh whyred newcam clang
+            bash doBuild.sh whyred oldcam clang
+            git apply oc.patch
+            bash doBuild_dtb.sh tulip clang qpnp
+            bash doBuild_dtb.sh whyred clang qpnp
+            git apply qti.patch
+            bash doBuild_dtb.sh tulip clang qti
+            bash doBuild_dtb.sh whyred clang qti
+            git restore .
+            bash doBuild.sh tulip newcam oc clang
+            bash doBuild.sh tulip oldcam oc clang
+            bash doBuild.sh whyred newcam oc clang
+            bash doBuild.sh whyred oldcam oc clang
+            wget https://raw.githubusercontent.com/TianWalkzzMiku/SRyzen-CAF/caf/build-final.sh
+            bash doFinal.sh clang
