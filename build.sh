@@ -2,9 +2,6 @@
 # Copyright (C) 2021-2022 Oktapra Amtono <oktapra.amtono@gmail.com>
 # Kernel Build Script
 
-#
-bot_token=5207751984:AAFzbTT208TwfDNHBfkugTP3PqYZLw5FjU0
-chat_id=-1001781224906
 # Kernel directory
 KERNEL_DIR=$PWD
 
@@ -47,6 +44,8 @@ if [[ "$*" =~ "oc" ]]; then
 fi
 
 # Setup environtment
+export CHAT_ID
+export BOT_TOKEN
 export ARCH=arm64
 export SUBARCH=arm64
 export KBUILD_BUILD_USER="TiannZ"
@@ -74,8 +73,8 @@ fi
 # Telegram setup
 push_message() {
     curl -s -X POST \
-        https://api.telegram.org/bot"{$bot_token}"/sendMessage \
-        -d chat_id="${chat_id}" \
+        https://api.telegram.org/bot"{$BOT_TOKEN}"/sendMessage \
+        -d chat_id="${CHAT_ID}" \
         -d text="$1" \
         -d "parse_mode=html" \
         -d "disable_web_page_preview=true"
@@ -83,8 +82,8 @@ push_message() {
 
 push_document() {
     curl -s -X POST \
-        https://api.telegram.org/bot"{$bot_token}"/sendDocument \
-        -F chat_id="${chat_id}" \
+        https://api.telegram.org/bot"{$BOT_TOKEN}"/sendDocument \
+        -F chat_id="${CHAT_ID}" \
         -F document=@"$1" \
         -F caption="$2" \
         -F "parse_mode=html" \

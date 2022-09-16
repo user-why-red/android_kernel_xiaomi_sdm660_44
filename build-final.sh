@@ -2,9 +2,6 @@
 # Copyright (C) 2020-2022 Oktapra Amtono <oktapra.amtono@gmail.com>
 # Docker Kernel Build Script
 
-# TG Token & TG CHAT_ID
-bot_token=5207751984:AAEcTALJDEx0BlYgesFHgsYTGqLsL2jFZQY
-chat_id=-1001781224906
 # Print cpu cores
 CORES=$(grep -c ^processor /proc/cpuinfo)
 CPU=$(lscpu | sed -nr '/Model name/ s/.*:\s*(.*) */\1/p')
@@ -27,8 +24,8 @@ fi
 # Telegram setup
 push_message() {
     curl -s -X POST \
-        https://api.telegram.org/bot"{$bot_token}"/sendMessage \
-        -d chat_id="${chat_id}" \
+        https://api.telegram.org/bot"{$BOT_TOKEN}"/sendMessage \
+        -d chat_id="${CHAT_ID}" \
         -d text="$1" \
         -d "parse_mode=html" \
         -d "disable_web_page_preview=true"

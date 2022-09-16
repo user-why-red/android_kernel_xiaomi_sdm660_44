@@ -25,8 +25,8 @@ git clone --depth=1 https://github.com/TianWalkzzMiku/AnyKernel3.git -b a26x-dtb
 # Telegram setup
 push_message() {
     curl -s -X POST \
-        https://api.telegram.org/bot"{$bot_token}"/sendMessage \
-        -d chat_id="${chat_id}" \
+        https://api.telegram.org/bot"{$BOT_TOKEN}"/sendMessage \
+        -d chat_id="${CHAT_ID}" \
         -d text="$1" \
         -d "parse_mode=html" \
         -d "disable_web_page_preview=true"

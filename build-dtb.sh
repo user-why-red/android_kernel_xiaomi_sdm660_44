@@ -2,9 +2,6 @@
 # Copyright (C) 2020-2022 Oktapra Amtono <oktapra.amtono@gmail.com>
 # Docker Kernel Build Script
 
-# 
-chat_id=-1001781224906
-bot_token=5207751984:AAFzbTT208TwfDNHBfkugTP3PqYZLw5FjU0
 # Kernel directory
 KERNEL_DIR=$PWD
 
@@ -28,8 +25,8 @@ KERNEL_IMG=$KERNEL_DIR/out/arch/arm64/boot/Image.gz
 # Telegram setup
 push_message() {
     curl -s -X POST \
-        https://api.telegram.org/bot"{$bot_token}"/sendMessage \
-        -d chat_id="${chat_id}" \
+        https://api.telegram.org/bot"{$BOT_TOKEN}"/sendMessage \
+        -d chat_id="${CHAT_ID}" \
         -d text="$1" \
         -d "parse_mode=html" \
         -d "disable_web_page_preview=true"
@@ -37,8 +34,8 @@ push_message() {
 
 push_document() {
     curl -s -X POST \
-        https://api.telegram.org/bot"{$bot_token}"/sendDocument \
-        -F chat_id="${chat_id}" \
+        https://api.telegram.org/bot"{$BOT_TOKEN}"/sendDocument \
+        -F chat_id="${CHAT_ID}" \
         -F document=@"$1" \
         -F caption="$2" \
         -F "parse_mode=html" \
