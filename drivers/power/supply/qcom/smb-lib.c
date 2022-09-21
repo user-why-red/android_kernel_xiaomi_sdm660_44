@@ -2817,7 +2817,7 @@ int smblib_set_prop_pd_current_max(struct smb_charger *chg,
 }
 
 #if defined (CONFIG_KERNEL_XIAOMI_WHYRED)
-#define FLOAT_CURRENT_UA		500000
+#define FLOAT_CURRENT_UA		1000000
 #else
 #define FLOAT_CURRENT_UA		1000000
 #endif
@@ -4042,7 +4042,7 @@ static void smblib_force_legacy_icl(struct smb_charger *chg, int pst)
 		#elif defined (CONFIG_KERNEL_XIAOMI_TULIP)
 		vote(chg->usb_icl_votable, LEGACY_UNKNOWN_VOTER, true, 1000000);
 		#elif defined (CONFIG_KERNEL_XIAOMI_WHYRED)
-		vote(chg->usb_icl_votable, LEGACY_UNKNOWN_VOTER, true, 500000);
+		vote(chg->usb_icl_votable, LEGACY_UNKNOWN_VOTER, true, 1000000);
 		#else
 		vote(chg->usb_icl_votable, LEGACY_UNKNOWN_VOTER, true, 1000000);
 		#endif
