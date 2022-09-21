@@ -91,13 +91,7 @@ enum print_reason {
 static int debug_mask;
 module_param_named(debug_mask, debug_mask, int, S_IRUSR | S_IWUSR);
 
-#define pl_dbg(chip, reason, fmt, ...)				\
-	do {								\
-		if (debug_mask & (reason))				\
-			pr_info(fmt, ##__VA_ARGS__);	\
-		else							\
-			pr_debug(fmt, ##__VA_ARGS__);		\
-	} while (0)
+#define pl_dbg(chip, reason, fmt, ...)
 
 enum {
 	VER = 0,
@@ -106,8 +100,10 @@ enum {
 	RESTRICT_CHG_CURRENT,
 };
 
-#if defined (CONFIG_KERNEL_XIAOMI_WHYRED)
-#define ONLY_PM660_CURRENT_UA 2000000
+#if defined (CONFIG_KERNEL_XIAOMI_WHYRED) || defined (CONFIG_KERNEL_XIAOMI_TULIP)
+#define ONLY_PM660_CURRENT_UA 2300000
+#else
+#define ONLY_PM660_CURRENT_UA 2700000
 #endif
  
 /*******
@@ -137,8 +133,8 @@ static void split_settled(struct pl_data *chip)
 		}
 		main_settled_ua = pval.intval;
 		/* slave gets 10 percent points less for ICL */
-#if defined (CONFIG_KERNEL_XIAOMI_WHYRED)
-		slave_icl_pct = max(0, chip->slave_pct);
+#if defined (CONFIG_KERNEL_XIAOMI_WHYRED) || defined (CONFIG_KERNEL_XIAOMI_TULIP)
+		slave_icl_pct = max(0, chip->slave_pct - 10);
 #else
 		slave_icl_pct = max(0, chip->slave_pct - 10);
 #endif
@@ -175,15 +171,13 @@ static void split_settled(struct pl_data *chip)
 	 */
 	if (slave_ua > chip->pl_settled_ua) {
 		pval.intval = total_current_ua - slave_ua;
-		#if defined (CONFIG_KERNEL_XIAOMI_WHYRED)
 		if (chip->pl_mode == POWER_SUPPLY_PL_USBIN_USBIN) {
 			pr_err("pl_disable_votable effective main_psy current_ua =%d \n", pval.intval);
-			if (get_effective_result_locked(chip->pl_disable_votable) && (pval.intval > ONLY_PM660_CURRENT_UA)){
+			if (get_effective_result_locked(chip->pl_disable_votable) && (pval.intval > ONLY_PM660_CURRENT_UA)) {
 				pr_err("pl_disable_votable effective main_psy force current_ua =%d to %d \n", pval.intval, ONLY_PM660_CURRENT_UA);
-			pval.intval = ONLY_PM660_CURRENT_UA;
+			    pval.intval = ONLY_PM660_CURRENT_UA;
 			}
 		}
-		#endif
 		/* Set ICL on main charger */
 		rc = power_supply_set_property(chip->main_psy,
 				POWER_SUPPLY_PROP_CURRENT_MAX, &pval);
@@ -212,15 +206,13 @@ static void split_settled(struct pl_data *chip)
 		}
 
 		pval.intval = total_current_ua - slave_ua;
-		#if defined (CONFIG_KERNEL_XIAOMI_WHYRED)
 		if (chip->pl_mode == POWER_SUPPLY_PL_USBIN_USBIN) {
 			pr_err("pl_disable_votable effective main_psy current_ua =%d \n", pval.intval);
-			if (get_effective_result_locked(chip->pl_disable_votable) && (pval.intval > ONLY_PM660_CURRENT_UA)){
+			if (get_effective_result_locked(chip->pl_disable_votable) && (pval.intval > ONLY_PM660_CURRENT_UA)) {
 				pr_err("pl_disable_votable effective main_psy force current_ua =%d to %d \n", pval.intval, ONLY_PM660_CURRENT_UA);
-			pval.intval = ONLY_PM660_CURRENT_UA;
+			    pval.intval = ONLY_PM660_CURRENT_UA;
 			}
 		}
-		#endif
 		/* Set ICL on main charger */
 		rc = power_supply_set_property(chip->main_psy,
 				POWER_SUPPLY_PROP_CURRENT_MAX, &pval);
@@ -457,7 +449,7 @@ static void get_fcc_split(struct pl_data *chip, int total_ua,
 			(s64)get_effective_result(chip->fv_votable) * 100);
 	}
 
-#if defined (CONFIG_KERNEL_XIAOMI_WHYRED)
+#if defined (CONFIG_KERNEL_XIAOMI_WHYRED) || defined (CONFIG_KERNEL_XIAOMI_TULIP)
 	bcl_ua = INT_MAX;
 	chip->slave_pct = 50;
 #endif
@@ -560,15 +552,13 @@ static int pl_fcc_vote_callback(struct votable *votable, void *data,
 			return 0;
 		}
 		pval.intval = total_fcc_ua;
-		#if defined (CONFIG_KERNEL_XIAOMI_WHYRED)
 		if (chip->pl_mode == POWER_SUPPLY_PL_USBIN_USBIN) {
 			pr_err("pl_disable_votable effective total_fcc_ua =%d \n", total_fcc_ua);
 			if (pval.intval > ONLY_PM660_CURRENT_UA) {
-				pval.intval = ONLY_PM660_CURRENT_UA;
-				pr_err("pl_disable_votable effective total_fcc_ua =%d froce to %d \n", total_fcc_ua, pval.intval);
+				    pval.intval = ONLY_PM660_CURRENT_UA;
+				    pr_err("pl_disable_votable effective total_fcc_ua =%d froce to %d \n", total_fcc_ua, pval.intval);
 			}
 		}
-		#endif
 		rc = power_supply_set_property(chip->main_psy,
 				POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT_MAX,
 				&pval);
@@ -631,14 +621,12 @@ static int pl_fcc_vote_callback(struct votable *votable, void *data,
 
 				chip->slave_fcc_ua = slave_fcc_ua;
 
-			#if defined (CONFIG_KERNEL_XIAOMI_WHYRED)
 			if (chip->pl_mode == POWER_SUPPLY_PL_USBMID_USBMID) {
 				if (chip->slave_fcc_ua == 200000) {
 					master_fcc_ua = 400000;//when battery temperature low than 5C, want current 400mA
 					pr_err("lct smb1355 master_fcc_ua froce to %d \n", master_fcc_ua);
 				}
 			}
-			#endif
 
 				pval.intval = master_fcc_ua;
 				rc = power_supply_set_property(chip->main_psy,
