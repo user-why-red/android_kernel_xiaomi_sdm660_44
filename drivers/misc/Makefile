@@ -59,6 +59,7 @@ obj-$(CONFIG_HDCP_QSEECOM) += hdcp.o
 ifdef CONFIG_COMPAT
 obj-$(CONFIG_QSEECOM) += compat_qseecom.o
 endif
+obj-$(CONFIG_KPROFILES) += kprofiles/
 obj-$(CONFIG_ECHO)		+= echo/
 obj-$(CONFIG_VEXPRESS_SYSCFG)	+= vexpress-syscfg.o
 obj-$(CONFIG_CXL_BASE)		+= cxl/

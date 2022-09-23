@@ -1774,6 +1774,7 @@ struct task_struct *fork_idle(int cpu)
 	return task;
 }
 
+extern int kp_active_mode(void);
 /*
  *  Ok, this is the main fork-routine.
  *
@@ -1793,7 +1794,19 @@ long _do_fork(unsigned long clone_flags,
 
 	/* Boost DDR bus to the when userspace launches an app */
 	if (task_is_zygote(current))
-		devfreq_boost_kick(DEVFREQ_MSM_CPUBW);
+/* Dont boost CPU & DDR if battery saver profile is enabled
+    * and boost CPU & DDR for 25ms if balanced profile is enabled
+    */
+       if (kp_active_mode() == 3 || kp_active_mode() == 0) {
+           devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 50);
+           devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 50);
+       } else if (kp_active_mode() == 2) {
+           devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 25);
+           devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 25);
+       } else {
+           pr_info("Battery Profile Active, Skipping Boost...\n");
+       }
+     }
 
 	/*
 	 * Determine whether and which event to report to ptracer.  When
