@@ -1790,24 +1790,19 @@ long _do_fork(unsigned long clone_flags,
 	int trace = 0;
 	long nr;
 
-	/* Boost DDR bus to the when userspace launches an app */
-	if (task_is_zygote(current)) {
 	  /*
 	   * Dont boost CPU & DDR if battery saver profile is enabled
 	   * and boost CPU & DDR for 25ms if balanced profile is enabled
 	   */
-	  if (kp_active_mode() == 2 || kp_active_mode() == 0) {
+	  if (task_is_zygote(current) && ((kp_active_mode() == 2) || (kp_active_mode() == 0))) {
 	    cpu_input_boost_kick_max(50);
 	    devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 50);
 		devfreq_boost_kick_max(DEVFREQ_MSM_GPUBW, 50);
-	  } else if (kp_active_mode() == 3) {
+	  } else if (task_is_zygote(current) && (kp_active_mode() == 3)) {
 	    cpu_input_boost_kick_max(25);
-	    devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 25);
-		devfreq_boost_kick_max(DEVFREQ_MSM_GPUBW, 50);
-	  } else {
-           pr_info("Battery Profiles Activated! Skipping CPU & DDR bus boosts\n");
+	    devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 75);
+		devfreq_boost_kick_max(DEVFREQ_MSM_GPUBW, 75);
 	  }
-	}
 
 	/*
 	 * Determine whether and which event to report to ptracer.  When
