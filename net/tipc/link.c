@@ -1233,6 +1233,12 @@ static int tipc_link_proto_rcv(struct tipc_link *l, struct sk_buff *skb,
 	if (link_own_addr(l) > msg_prevnode(hdr))
 		l->net_plane = msg_net_plane(hdr);
 
+	if (skb_linearize(skb))
+		goto exit;
+
+	hdr = buf_msg(skb);
+	data = msg_data(hdr);
+
 	switch (mtyp) {
 	case RESET_MSG:
 
