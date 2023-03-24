@@ -1868,10 +1868,12 @@ long kgsl_ioctl_drawctxt_destroy(struct kgsl_device_private *dev_priv,
 
 static long gpumem_free_entry(struct kgsl_mem_entry *entry)
 {
+	pid_t ptname = 0;
+
 	if (!kgsl_mem_entry_set_pend(entry))
 		return -EBUSY;
 
-	trace_kgsl_mem_free(entry);
+//	trace_kgsl_mem_free(entry);
 
 	if (entry->memdesc.pagetable != NULL)
 		ptname = entry->memdesc.pagetable->name;
