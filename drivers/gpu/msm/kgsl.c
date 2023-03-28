@@ -1893,13 +1893,8 @@ static void gpumem_free_func(struct kgsl_device *device,
 	kgsl_readtimestamp(device, context, KGSL_TIMESTAMP_RETIRED, &timestamp);
 
 	/* Free the memory for all event types */
-//	trace_kgsl_mem_timestamp_free(device, entry, KGSL_CONTEXT_ID(context),
-//		timestamp, 0);
-	kgsl_memfree_add(entry->priv->pid,
-			entry->memdesc.pagetable ?
-				entry->memdesc.pagetable->name : 0,
-			entry->memdesc.gpuaddr, entry->memdesc.size,
-			entry->memdesc.flags);
+    trace_kgsl_mem_timestamp_free(device, entry, KGSL_CONTEXT_ID(context),
+		timestamp, 0);
 
 	kgsl_mem_entry_put(entry);
 }
@@ -1994,13 +1989,6 @@ static void gpuobj_free_fence_func(void *priv)
 {
 	struct kgsl_mem_entry *entry = priv;
 
-	trace_kgsl_mem_free(entry);
-	kgsl_memfree_add(entry->priv->pid,
-			entry->memdesc.pagetable ?
-				entry->memdesc.pagetable->name : 0,
-			entry->memdesc.gpuaddr, entry->memdesc.size,
-			entry->memdesc.flags);
-
 	INIT_WORK(&entry->work, _deferred_put);
 	queue_work(kgsl_driver.mem_workqueue, &entry->work);
 }
@@ -2032,14 +2020,15 @@ static long gpuobj_free_on_fence(struct kgsl_device_private *dev_priv,
 	handle = kgsl_sync_fence_async_wait(event.fd,
 		gpuobj_free_fence_func, entry);
 
+    
+	/* if handle is NULL the fence has already signaled */
+	if (handle == NULL)
+		return gpumem_free_entry(entry);
+		
 	if (IS_ERR(handle)) {
 		kgsl_mem_entry_unset_pend(entry);
 		return PTR_ERR(handle);
 	}
-
-	/* if handle is NULL the fence has already signaled */
-	if (handle == NULL)
-		gpuobj_free_fence_func(entry);
 
 	return 0;
 }
