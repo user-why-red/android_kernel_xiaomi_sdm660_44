@@ -10,7 +10,7 @@ BUILD_START=$(date +"%s")
 
 # Name and version of kernel
 KERNEL_NAME="SuperRyzen-OSS"
-KERNEL_VERSION="v9"
+KERNEL_VERSION="v10"
 
 # Device name
 if [[ "$*" =~ "a26x" ]]; then
