@@ -136,7 +136,7 @@ static unsigned int eventfd_poll(struct file *file, poll_table *wait)
 
 static void eventfd_ctx_do_read(struct eventfd_ctx *ctx, __u64 *cnt)
 {
-	*cnt = (ctx->flags & EFD_SEMAPHORE) ? 1 : ctx->count;
+	*cnt = ((ctx->flags & EFD_SEMAPHORE) && ctx->count) ? 1 : ctx->count;
 	ctx->count -= *cnt;
 }
 
