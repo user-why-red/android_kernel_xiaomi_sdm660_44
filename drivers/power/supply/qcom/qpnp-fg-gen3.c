@@ -4055,6 +4055,12 @@ static int fg_psy_get_property(struct power_supply *psy,
 			return rc;
 		}
 		break;
+
+#ifdef CONFIG_MACH_LONGCHEER
+	case POWER_SUPPLY_PROP_ONLINE:
+		pval->intval = fg->online_status;
+		break;
+#endif
 	case POWER_SUPPLY_PROP_RESISTANCE:
 		rc = fg_get_battery_resistance(chip, &pval->intval);
 		break;
