@@ -672,10 +672,9 @@ static int fg_get_battery_temp(struct fg_chip *chip, int *val)
 			BATT_INFO_BATT_TEMP_LSB(chip),buf[1],buf[0]);
 	temp = ((buf[1] & BATT_TEMP_MSB_MASK) << 8) |
 		(buf[0] & BATT_TEMP_LSB_MASK);
-	temp = DIV_ROUND_CLOSEST(temp, 4);
 
-	/* Value is in Kelvin; Convert it to deciDegC */
-	temp = (temp - 273) * 10;
+	/* Value is in 0.25 Kelvin; convert it to deciDegC */
+	temp = DIV_ROUND_CLOSEST((temp - 273*4) * 10, 4);
 		pr_debug("LCT TEMP=%d\n",temp);
 
 #if defined (CONFIG_KERNEL_XIAOMI_TULIP)	
