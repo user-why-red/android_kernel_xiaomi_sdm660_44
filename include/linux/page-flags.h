@@ -608,7 +608,7 @@ static inline void __ClearPageBalloon(struct page *page)
 	atomic_set(&page->_mapcount, -1);
 }
 
-__PAGEFLAG(Isolated, isolated, PF_ANY);
+PAGEFLAG(Isolated, isolated, PF_ANY);
 
 /*
  * If network-based swap is enabled, sl*b must keep track of whether pages
