@@ -1020,6 +1020,7 @@ static int de_thread(struct task_struct *tsk)
 		tsk->pid = leader->pid;
 		change_pid(tsk, PIDTYPE_PID, task_pid(leader));
 		transfer_pid(leader, tsk, PIDTYPE_PGID);
+		transfer_pid(leader, tsk, __PIDTYPE_TGID);
 		transfer_pid(leader, tsk, PIDTYPE_SID);
 
 		list_replace_rcu(&leader->tasks, &tsk->tasks);
@@ -1551,7 +1552,7 @@ static void android_service_blacklist(const char *name)
 		if (!strncmp(blacklist[i].path, name, blacklist[i].len)) {
 			pr_info("%s: sending SIGSTOP to %s\n", __func__, name);
 			do_send_sig_info(SIGSTOP, SEND_SIG_PRIV, current,
-					 PIDTYPE_TGID);
+					 __PIDTYPE_TGID);
 			break;
 		}
 	}
