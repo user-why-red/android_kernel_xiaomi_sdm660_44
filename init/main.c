@@ -149,6 +149,22 @@ static int __init set_wiredbtnmode(char *val)
 }
 __setup("androidboot.wiredbtnaltmode=", set_wiredbtnmode);
 
+bool enable_cpuoc = false;
+static int __init set_cpuoverclock(char *val)
+{
+	unsigned int temp;
+
+	get_option(&val, &temp);
+
+	if (temp) {
+		enable_cpuoc = true;
+		pr_info("Kernel: CPU OC mode = 1");
+	}
+
+	return 0;
+}
+__setup("androidboot.cpuoverclock=", set_cpuoverclock);
+
 /*
  * Used to generate warnings if static_key manipulation functions are used
  * before jump_label_init is called.
