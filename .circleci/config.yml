@@ -5,6 +5,9 @@ jobs:
       - image: okta10/docker:ubuntu
     steps:
       - run:
+      - add_ssh_keys:
+         fingerprints:
+          - "db:37:42:18:f7:a5:a3:f6:0c:ad:c9:f2:99:4e:55:52"
           name: Building SuperRyzen Kernel
           command: |
             wget https://raw.githubusercontent.com/TianWalkzzMiku/SRyzen-CAF/caf/build-start.sh
