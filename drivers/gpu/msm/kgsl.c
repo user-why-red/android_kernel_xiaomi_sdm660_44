@@ -82,7 +82,7 @@ struct kgsl_dma_buf_meta {
 
 bool adrenokgsl_on = false;
 
-bool is_adrenokgsl_on()
+bool is_adrenokgsl_on(void)
 {
 	return adrenokgsl_on;
 }
