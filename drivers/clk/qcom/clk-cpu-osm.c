@@ -3150,7 +3150,7 @@ static int clk_cpu_osm_driver_probe(struct platform_device *pdev)
 		pte_efuse = readl_relaxed(pwrcl_clk.vbases[EFUSE_BASE]);
 
 		if (enable_cpuoc) {
-		speedbin = 1;
+		speedbin = 0;
 		} else {
 
 		speedbin = ((pte_efuse >> PWRCL_EFUSE_SHIFT) &
@@ -3174,7 +3174,7 @@ static int clk_cpu_osm_driver_probe(struct platform_device *pdev)
 		/* Multiple speed-bins are supported */
 
 		if (enable_cpuoc) {
-		speedbin = 1;
+		speedbin = 0;
 		} else {
 
 		pte_efuse = readl_relaxed(perfcl_clk.vbases[EFUSE_BASE]);
