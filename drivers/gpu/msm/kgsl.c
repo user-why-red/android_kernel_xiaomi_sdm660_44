@@ -1878,10 +1878,9 @@ static long gpumem_free_entry(struct kgsl_mem_entry *entry)
 	if (entry->memdesc.pagetable != NULL)
 		ptname = entry->memdesc.pagetable->name;
 
-    kgsl_memfree_add(pid_nr(entry->priv->pid), ptname,
+	kgsl_memfree_add(pid_nr(entry->priv->pid), ptname,
 			entry->memdesc.gpuaddr,	entry->memdesc.size,
 			entry->memdesc.flags);
-
 
 	kgsl_mem_entry_put(entry);
 
