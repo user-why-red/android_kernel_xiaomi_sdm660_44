@@ -3,11 +3,11 @@
 
 #include <linux/sched.h>
 
-#define CPUPRI_NR_PRIORITIES	MAX_RT_PRIO
+#define CPUPRI_NR_PRIORITIES	(MAX_RT_PRIO + 1)
 
 #define CPUPRI_INVALID		-1
 #define CPUPRI_NORMAL		 0
-/* values 1-99 are for RT1-RT99 priorities */
+/* values 2-100 are RT priorities 0-99 */
 
 struct cpupri_vec {
 	atomic_t	count;
