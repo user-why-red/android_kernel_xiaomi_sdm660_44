@@ -1618,7 +1618,6 @@ select_task_rq_rt(struct task_struct *p, int cpu, int sd_flag, int flags,
 	}
 	rcu_read_unlock();
 
-out:
 	/*
 	 * If previous CPU was different, make sure to cancel any active
 	 * schedtune timers and deboost.
