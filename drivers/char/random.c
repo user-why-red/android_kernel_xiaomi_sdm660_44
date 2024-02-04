@@ -2295,7 +2295,6 @@ u32 get_random_u32(void)
 	unsigned long flags;
 	struct batched_entropy *batch;
 	static void *previous;
-
 	if (arch_get_random_int(&ret))
 		return ret;
 
