@@ -2202,7 +2202,7 @@ static void dm_request_fn(struct request_queue *q)
 	goto out;
 
 delay_and_out:
-	blk_delay_queue(q, HZ / 100);
+	blk_delay_queue(q, 10);
 out:
 	dm_put_live_table(md, srcu_idx);
 }
@@ -2313,8 +2313,8 @@ static void dm_init_old_md_queue(struct mapped_device *md)
 	/*
 	 * Initialize aspects of queue that aren't relevant for blk-mq
 	 */
-	md->queue->backing_dev_info.congested_data = md;
-	md->queue->backing_dev_info.congested_fn = dm_any_congested;
+	md->queue->backing_dev_info->congested_data = md;
+	md->queue->backing_dev_info->congested_fn = dm_any_congested;
 	blk_queue_bounce_limit(md->queue, BLK_BOUNCE_ANY);
 }
 
