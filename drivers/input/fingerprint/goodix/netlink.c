@@ -2,7 +2,6 @@
  * netlink interface
  *
  * Copyright (c) 2017 Goodix
- * Copyright (C) 2019 XiaoMi, Inc.
  */
 #include <linux/init.h>
 #include <linux/module.h>
@@ -16,45 +15,43 @@
 #define NETLINK_TEST 25
 #define MAX_MSGSIZE 32
 
-int stringlength(char *s);
-void sendnlmsg(char * message);
 static int pid = -1;
-struct sock *nl_sk = NULL;
+static struct sock *nl_sk;
 
-void sendnlmsg(char *message)
+int sendnlmsg(char *msg)
 {
-	struct sk_buff *skb_1;
+	struct sk_buff *skb;
 	struct nlmsghdr *nlh;
 	int len = NLMSG_SPACE(MAX_MSGSIZE);
-	int slen = 0;
 	int ret = 0;
 
-	if (!message || !nl_sk || !pid) {
-		return;
+	if (!msg || !nl_sk || !pid)
+		return -ENODEV;
+
+	skb = alloc_skb(len, GFP_ATOMIC);
+	if (!skb)
+		return -ENOMEM;
+
+	nlh = nlmsg_put(skb, 0, 0, 0, MAX_MSGSIZE, 0);
+	if (!nlh) {
+		kfree_skb(skb);
+		return -EMSGSIZE;
 	}
 
-	skb_1 = alloc_skb(len, GFP_KERNEL);
-	if (!skb_1) {
-		pr_err("alloc_skb error\n");
-		return;
-	}
+	NETLINK_CB(skb).portid = 0;
+	NETLINK_CB(skb).dst_group = 0;
 
-	slen = strlen(message);
-	nlh = nlmsg_put(skb_1,0,0,0,MAX_MSGSIZE,0);
+	memcpy(NLMSG_DATA(nlh), msg, sizeof(char));
+	pr_debug("send message: %d\n", *(char *)NLMSG_DATA(nlh));
 
-	NETLINK_CB(skb_1).portid = 0;
-	NETLINK_CB(skb_1).dst_group = 0;
+	ret = netlink_unicast(nl_sk, skb, pid, MSG_DONTWAIT);
+	if (ret > 0)
+		ret = 0;
 
-	message[slen]= '\0';
-	memcpy(NLMSG_DATA(nlh), message, slen+1);
-
-	ret = netlink_unicast(nl_sk, skb_1, pid, MSG_DONTWAIT);
-	if (!ret) {
-		pr_err("send msg from kernel to usespace failed ret 0x%x \n", ret);
-	}
+	return ret;
 }
 
-void nl_data_ready(struct sk_buff *__skb)
+static void nl_data_ready(struct sk_buff *__skb)
 {
 	struct sk_buff *skb;
 	struct nlmsghdr *nlh;

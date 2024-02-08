@@ -42,7 +42,6 @@
 #include <linux/pm_qos.h>
 #include <linux/cpufreq.h>
 #include <linux/mdss_io_util.h>
-#include <linux/wakelock.h>
 #include "gf_spi.h"
 
 #if defined(USE_SPI_BUS)
@@ -50,6 +49,10 @@
 #include <linux/spi/spidev.h>
 #elif defined(USE_PLATFORM_BUS)
 #include <linux/platform_device.h>
+#endif
+
+#ifdef CONFIG_TOUCHSCREEN_COMMON
+#include <linux/input/tp_common.h>
 #endif
 
 #define VER_MAJOR   1
@@ -61,11 +64,11 @@
 
 #define GF_SPIDEV_NAME     "goodix,fingerprint"
 /*device name after register in charater*/
-#define GF_DEV_NAME			"goodix_fp"
-#define	GF_INPUT_NAME		"uinput-goodix" /*"goodix_fp" */
+#define GF_DEV_NAME            "goodix_fp"
+#define	GF_INPUT_NAME	    "uinput-goodix"	/*"goodix_fp" */
 
 #define	CHRD_DRIVER_NAME	"goodix_fp_spi"
-#define	CLASS_NAME			"goodix_fp"
+#define	CLASS_NAME		    "goodix_fp"
 
 #define N_SPI_MINORS		32	/* ... up to 256 */
 static int SPIDEV_MAJOR;
@@ -73,10 +76,9 @@ static int SPIDEV_MAJOR;
 static DECLARE_BITMAP(minors, N_SPI_MINORS);
 static LIST_HEAD(device_list);
 static DEFINE_RT_MUTEX(device_list_lock);
-static struct wake_lock fp_wakelock;
+static struct wakeup_source fp_wakelock;
 static struct gf_dev gf;
 
-#if 0
 static struct gf_key_map maps[] = {
 	{ EV_KEY, GF_KEY_INPUT_HOME },
 	{ EV_KEY, GF_KEY_INPUT_MENU },
@@ -93,22 +95,6 @@ static struct gf_key_map maps[] = {
 	{ EV_KEY, GF_NAV_INPUT_LONG_PRESS },
 	{ EV_KEY, GF_NAV_INPUT_HEAVY },
 #endif
-};
-#endif
-struct gf_key_map maps[] = {
-        { EV_KEY, KEY_HOME },
-        { EV_KEY, KEY_MENU },
-        { EV_KEY, KEY_BACK },
-        { EV_KEY, KEY_POWER },
-        { EV_KEY, KEY_UP },
-        { EV_KEY, KEY_DOWN },
-        { EV_KEY, KEY_RIGHT },
-        { EV_KEY, KEY_LEFT },
-        { EV_KEY, KEY_CAMERA },
-        { EV_KEY, KEY_F9 },
-        { EV_KEY, KEY_F19 },
-        { EV_KEY, KEY_ENTER},
-        { EV_KEY, KEY_KPENTER },
 };
 
 static void gf_enable_irq(struct gf_dev *gf_dev)
@@ -339,7 +325,7 @@ static irqreturn_t gf_irq(int irq, void *handle)
 #if defined(GF_NETLINK_ENABLE)
 	char msg = GF_NET_EVENT_IRQ;
 	struct gf_dev *gf_dev = &gf;
-	wake_lock_timeout(&fp_wakelock, msecs_to_jiffies(WAKELOCK_HOLD_TIME));
+	__pm_wakeup_event(&fp_wakelock, WAKELOCK_HOLD_TIME);
 	sendnlmsg(&msg);
 	if ((gf_dev->wait_finger_down == true) && (gf_dev->device_available == 1) && (gf_dev->fb_black == 1)) {
 		printk("%s:shedule_work\n",__func__);
@@ -362,7 +348,7 @@ static int irq_setup(struct gf_dev *gf_dev)
 
 	gf_dev->irq = gf_irq_num(gf_dev);
 	status = request_threaded_irq(gf_dev->irq, NULL, gf_irq,
-			IRQF_TRIGGER_RISING | IRQF_ONESHOT,
+			IRQF_TRIGGER_RISING | IRQF_ONESHOT | IRQF_PERF_CRITICAL,
 			"gf", gf_dev);
 
 	if (status) {
@@ -388,9 +374,13 @@ static void gf_kernel_key_input(struct gf_dev *gf_dev, struct gf_key *gf_key)
 	uint32_t key_input = 0;
 
 	if (gf_key->key == GF_KEY_HOME) {
-		key_input = KEY_KPENTER;
+#ifdef CONFIG_TOUCHSCREEN_COMMON
+		if (!capacitive_keys_enabled)
+			return;
+#endif
+		key_input = GF_KEY_INPUT_HOME;
 	} else if (gf_key->key == GF_KEY_POWER) {
-		key_input = KEY_KPENTER;
+		key_input = GF_KEY_INPUT_POWER;
 	} else if (gf_key->key == GF_KEY_CAMERA) {
 		key_input = GF_KEY_INPUT_CAMERA;
 	} else {
@@ -444,21 +434,26 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			break;
 		}
 		break;
+
 	case GF_IOC_EXIT:
 		pr_debug("%s GF_IOC_EXIT\n", __func__);
 		break;
+
 	case GF_IOC_DISABLE_IRQ:
 		pr_debug("%s GF_IOC_DISABEL_IRQ\n", __func__);
 		gf_disable_irq(gf_dev);
 		break;
+
 	case GF_IOC_ENABLE_IRQ:
 		pr_debug("%s GF_IOC_ENABLE_IRQ\n", __func__);
 		gf_enable_irq(gf_dev);
 		break;
+
 	case GF_IOC_RESET:
 		pr_debug("%s GF_IOC_RESET\n", __func__);
 		gf_hw_reset(gf_dev, 3);
 		break;
+
 	case GF_IOC_INPUT_KEY_EVENT:
 		if (copy_from_user(&gf_key, (void __user *)arg, sizeof(struct gf_key))) {
 			pr_err("failed to copy input key event from user to kernel\n");
@@ -490,6 +485,7 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		pr_debug("doesn't support control clock!\n");
 #endif
 		break;
+
 	case GF_IOC_DISABLE_SPI_CLK:
 		pr_debug("%s GF_IOC_DISABLE_SPI_CLK\n", __func__);
 #ifdef AP_CONTROL_CLK
@@ -498,23 +494,29 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		pr_debug("doesn't support control clock!\n");
 #endif
 		break;
+
 	case GF_IOC_ENABLE_POWER:
 		pr_debug("%s GF_IOC_ENABLE_POWER\n", __func__);
 		gf_power_on(gf_dev);
 		break;
+
 	case GF_IOC_DISABLE_POWER:
 		pr_debug("%s GF_IOC_DISABLE_POWER\n", __func__);
 		gf_power_off(gf_dev);
 		break;
+
 	case GF_IOC_ENTER_SLEEP_MODE:
 		pr_debug("%s GF_IOC_ENTER_SLEEP_MODE\n", __func__);
 		break;
+
 	case GF_IOC_GET_FW_INFO:
 		pr_debug("%s GF_IOC_GET_FW_INFO\n", __func__);
 		break;
+
 	case GF_IOC_REMOVE:
 		pr_debug("%s GF_IOC_REMOVE\n", __func__);
 		break;
+
 	case GF_IOC_CHIP_INFO:
 		pr_debug("%s GF_IOC_CHIP_INFO\n", __func__);
 		if (copy_from_user(&info, (void __user *)arg, sizeof(struct gf_ioc_chip_info))) {
@@ -525,6 +527,7 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		pr_info("mode : 0x%x\n", info.mode);
 		pr_info("operation: 0x%x\n", info.operation);
 		break;
+
 	default:
 		pr_warn("unsupport cmd:0x%x\n", cmd);
 		break;
@@ -542,9 +545,9 @@ static long gf_compat_ioctl(struct file *filp, unsigned int cmd, unsigned long a
 
  static void notification_work(struct work_struct *work)
 {
-	printk("notification_work\n");
+	pr_debug("notification_work\n");
 	mdss_prim_panel_fb_unblank(FP_UNLOCK_REJECTION_TIMEOUT);
-	printk("unblank\n");
+	pr_debug("unblank\n");
 }
 
 static int gf_open(struct inode *inode, struct file *filp)
@@ -593,19 +596,6 @@ err_parse_dt:
 	return status;
 }
 
-static int proc_show_ver(struct seq_file *file,void *v)
-{
-	seq_printf(file,"Fingerprint: Goodix\n");
-	return 0;
-}
-
-static int proc_open(struct inode *inode,struct file *file)
-{
-	printk("gf3258 proc_open\n");
-	single_open(file,proc_show_ver,NULL);
-	return 0;
-}
-
 #ifdef GF_FASYNC
 static int gf_fasync(int fd, struct file *filp, int mode)
 {
@@ -630,7 +620,6 @@ static int gf_release(struct inode *inode, struct file *filp)
 	/*last close?? */
 	gf_dev->users--;
 	if (!gf_dev->users) {
-		pr_info("disble_irq. irq = %d\n", gf_dev->irq);
 		irq_cleanup(gf_dev);
 		gf_cleanup(gf_dev);
 
@@ -659,12 +648,17 @@ static const struct file_operations gf_fops = {
 #endif
 };
 
-static const struct file_operations proc_file_ops = {
-	.owner = THIS_MODULE,
-	.open = proc_open,
-	.read = seq_read,
-	.release = single_release,
-};
+static void set_fingerprintd_nice(int nice)
+{
+	struct task_struct *p;
+
+	read_lock(&tasklist_lock);
+	for_each_process(p) {
+		if (strstr(p->comm, "erprint"))
+			set_user_nice(p, nice);
+	}
+	read_unlock(&tasklist_lock);
+}
 
 static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 		unsigned long val, void *data)
@@ -677,16 +671,19 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 	if (val != FB_EVENT_BLANK)
 		return 0;
 
-	pr_info("[info] %s go to the goodix_fb_state_chg_callback value = %d\n",
-			__func__, (int)val);
 	gf_dev = container_of(nb, struct gf_dev, notifier);
 	if (evdata && evdata->data && val == FB_EVENT_BLANK && gf_dev) {
 		blank = *(int *)(evdata->data);
 		switch (blank) {
 		case FB_BLANK_POWERDOWN:
+			set_fingerprintd_nice(MIN_NICE);
 			if (gf_dev->device_available == 1) {
 				gf_dev->fb_black = 1;
 				gf_dev->wait_finger_down = true;
+				/* Disable IRQ when screen turns off,
+				 * only if proximity sensor is covered */
+				if (gf_dev->proximity_state)
+					gf_disable_irq(gf_dev);
 #if defined(GF_NETLINK_ENABLE)
 				msg = GF_NET_EVENT_FB_BLACK;
 				sendnlmsg(&msg);
@@ -697,8 +694,12 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 			}
 			break;
 		case FB_BLANK_UNBLANK:
+		case FB_BLANK_NORMAL:
+			set_fingerprintd_nice(0);
 			if (gf_dev->device_available == 1) {
 				gf_dev->fb_black = 0;
+				/* Unconditionally enable IRQ when screen turns on */
+				gf_enable_irq(gf_dev);
 #if defined(GF_NETLINK_ENABLE)
 				msg = GF_NET_EVENT_FB_UNBLACK;
 				sendnlmsg(&msg);
@@ -720,6 +721,41 @@ static struct notifier_block goodix_noti_block = {
 	.notifier_call = goodix_fb_state_chg_callback,
 };
 
+static ssize_t proximity_state_set(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct gf_dev *gf_dev = dev_get_drvdata(dev);
+	int rc, val;
+
+	rc = kstrtoint(buf, 10, &val);
+	if (rc)
+		return -EINVAL;
+
+	gf_dev->proximity_state = !!val;
+
+	if (gf_dev->fb_black) {
+		if (gf_dev->proximity_state) {
+			/* Disable IRQ when screen is off and proximity sensor is covered */
+			gf_disable_irq(gf_dev);
+		} else {
+			/* Enable IRQ when screen is off and proximity sensor is uncovered */
+			gf_enable_irq(gf_dev);
+		}
+	}
+
+	return count;
+}
+static DEVICE_ATTR(proximity_state, S_IWUSR, NULL, proximity_state_set);
+
+static struct attribute *attrs[] = {
+	&dev_attr_proximity_state.attr,
+	NULL
+};
+
+static const struct attribute_group attr_group = {
+	.attrs = attrs,
+};
+
 static struct class *gf_class;
 #if defined(USE_SPI_BUS)
 static int gf_probe(struct spi_device *spi)
@@ -731,7 +767,7 @@ static int gf_probe(struct platform_device *pdev)
 	int status = -EINVAL;
 	unsigned long minor;
 	int i;
-#if defined (CONFIG_KERNEL_XIAOMI_A26X) || defined (CONFIG_KERNEL_XIAOMI_LAVENDER)
+#if defined CONFIG_MACH_XIAOMI_LAVENDER || defined CONFIG_MACH_XIAOMI_WAYNE
 	struct regulator *vreg;
 #endif
 
@@ -750,7 +786,7 @@ static int gf_probe(struct platform_device *pdev)
 	gf_dev->wait_finger_down = false;
 	INIT_WORK(&gf_dev->work, notification_work);
 
-#if defined (CONFIG_KERNEL_XIAOMI_A26X) || defined (CONFIG_KERNEL_XIAOMI_LAVENDER)
+#if defined CONFIG_MACH_XIAOMI_LAVENDER || defined CONFIG_MACH_XIAOMI_WAYNE
 	vreg = regulator_get(&gf_dev->spi->dev,"vcc_ana");
 	if (!vreg) {
 		dev_err(&gf_dev->spi->dev, "Unable to get vdd_ana\n");
@@ -797,7 +833,6 @@ static int gf_probe(struct platform_device *pdev)
 	}
 	rt_mutex_unlock(&device_list_lock);
 
-	/*input device subsystem */
 	gf_dev->input = input_allocate_device();
 	if (gf_dev->input == NULL) {
 		pr_err("%s, failed to allocate input device\n", __func__);
@@ -829,12 +864,22 @@ static int gf_probe(struct platform_device *pdev)
 	gf_dev->notifier = goodix_noti_block;
 	fb_register_client(&gf_dev->notifier);
 
-	wake_lock_init(&fp_wakelock, WAKE_LOCK_SUSPEND, "fp_wakelock");
+	dev_set_drvdata(&gf_dev->spi->dev, gf_dev);
+
+	status = sysfs_create_group(&gf_dev->spi->dev.kobj, &attr_group);
+	if (status) {
+		pr_err("%s: Failed to create sysfs\n", __func__);
+		goto error_sysfs;
+	}
+
+	wakeup_source_init(&fp_wakelock, "fp_wakelock");
 
 	pr_info("version V%d.%d.%02d\n", VER_MAJOR, VER_MINOR, PATCH_LEVEL);
 
 	return status;
 
+error_sysfs:
+	sysfs_remove_group(&gf_dev->spi->dev.kobj, &attr_group);
 #ifdef AP_CONTROL_CLK
 gfspi_probe_clk_enable_failed:
 	gfspi_ioctl_clk_uninit(gf_dev);
@@ -867,7 +912,7 @@ static int gf_remove(struct platform_device *pdev)
 {
 	struct gf_dev *gf_dev = &gf;
 
-	wake_lock_destroy(&fp_wakelock);
+	wakeup_source_trash(&fp_wakelock);
 	fb_unregister_client(&gf_dev->notifier);
 	if (gf_dev->input)
 		input_unregister_device(gf_dev->input);
@@ -878,7 +923,6 @@ static int gf_remove(struct platform_device *pdev)
 	list_del(&gf_dev->device_entry);
 	device_destroy(gf_class, gf_dev->devt);
 	clear_bit(MINOR(gf_dev->devt), minors);
-
 	rt_mutex_unlock(&device_list_lock);
 
 	return 0;
