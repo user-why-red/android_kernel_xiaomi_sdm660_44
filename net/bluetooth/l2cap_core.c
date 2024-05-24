@@ -6665,6 +6665,7 @@ static int l2cap_rx(struct l2cap_chan *chan, struct l2cap_ctrl *control,
 static int l2cap_stream_rx(struct l2cap_chan *chan, struct l2cap_ctrl *control,
 			   struct sk_buff *skb)
 {
+	int err = 0;
 	/* l2cap_reassemble_sdu may free skb, hence invalidate control, so store
 	 * the txseq field in advance to use it after l2cap_reassemble_sdu
 	 * returns and to avoid the race condition, for example:
