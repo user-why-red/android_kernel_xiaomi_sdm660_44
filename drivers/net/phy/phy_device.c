@@ -688,14 +688,6 @@ error:
 	/* phy_detach() does all of the cleanup below */
 	phy_detach(phydev);
 	return err;
-
-error_module_put:
-	module_put(d->driver->owner);
-	d->driver = NULL;
-error_put_device:
-	put_device(d);
-	module_put(bus->owner);
-	return err;
 }
 EXPORT_SYMBOL(phy_attach_direct);
 
