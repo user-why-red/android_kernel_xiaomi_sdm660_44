@@ -150,9 +150,6 @@ static int __init set_wired_buttonmode(char *val)
 	if (temp) {
 		wired_btn_altmode = true;
 		pr_info("Kernel: alternate wired button mode is enabled\n");
-	} else {
-		wired_btn_altmode = false;
-		pr_info("Kernel: alternate wired button mode is disabled\n");
 	}
 
 	return 0;
