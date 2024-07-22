@@ -1323,14 +1323,24 @@ err0:
 
 static int dwc3_remove(struct platform_device *pdev)
 {
-	struct dwc3	*dwc = platform_get_drvdata(pdev);
+	struct dwc3 *dwc = platform_get_drvdata(pdev);
 	struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 
+	if (!dwc) {
+		dev_err(&pdev->dev, "Failed to get dwc3 platform data\n");
+		return -ENODEV;
+	}
+
+	if (!res) {
+		dev_err(&pdev->dev, "Failed to get platform resource\n");
+		return -ENODEV;
+	}
+
 	/*
-	 * restore res->start back to its original value so that, in case the
-	 * probe is deferred, we don't end up getting error in request the
-	 * memory region the next time probe is called.
-	 */
+	* Restore res->start back to its original value so that, in case the
+	* probe is deferred, we don't end up getting error in request the
+	* memory region the next time probe is called.
+	*/
 	res->start -= DWC3_GLOBALS_REGS_START;
 
 	dwc3_debugfs_exit(dwc);
@@ -1338,16 +1348,26 @@ static int dwc3_remove(struct platform_device *pdev)
 	dwc3_event_buffers_cleanup(dwc);
 	dwc3_free_event_buffers(dwc);
 
-	phy_power_off(dwc->usb2_generic_phy);
-	phy_power_off(dwc->usb3_generic_phy);
+	if (dwc->usb2_generic_phy) {
+		phy_power_off(dwc->usb2_generic_phy);
+		phy_exit(dwc->usb2_generic_phy);
+	}
+
+	if (dwc->usb3_generic_phy) {
+		phy_power_off(dwc->usb3_generic_phy);
+		phy_exit(dwc->usb3_generic_phy);
+	}
 
 	dwc3_core_exit(dwc);
 	dwc3_ulpi_exit(dwc);
 
-	destroy_workqueue(dwc->dwc_wq);
+	if (dwc->dwc_wq)
+		destroy_workqueue(dwc->dwc_wq);
 
 	pm_runtime_put_sync(&pdev->dev);
 	pm_runtime_disable(&pdev->dev);
+
+	kfree(dwc);
 
 	return 0;
 }
