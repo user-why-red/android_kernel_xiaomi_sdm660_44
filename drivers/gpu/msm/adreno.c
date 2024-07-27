@@ -46,6 +46,7 @@
 #undef MODULE_PARAM_PREFIX
 #define MODULE_PARAM_PREFIX "adreno."
 
+extern int enable_gpuoc;
 static bool nopreempt;
 module_param(nopreempt, bool, 0444);
 MODULE_PARM_DESC(nopreempt, "Disable GPU preemption");
@@ -697,7 +698,14 @@ static int adreno_of_get_pwrlevels(struct adreno_device *adreno_dev,
 	struct device_node *node, *child;
 	unsigned int bin = 0;
 
-	node = of_find_node_by_name(parent, "qcom,gpu-pwrlevel-bins");
+	if (enable_gpuoc) {
+			node = of_find_node_by_name(parent, "qcom,gpu-pwrlevel-binsoc");
+
+			if (node == NULL)
+				node = of_find_node_by_name(parent, "qcom,gpu-pwrlevel-bins");
+		} else {
+			node = of_find_node_by_name(parent, "qcom,gpu-pwrlevel-bins");
+		}
 	if (node == NULL)
 		return adreno_of_get_legacy_pwrlevels(adreno_dev, parent);
 

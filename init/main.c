@@ -149,6 +149,112 @@ static int __init set_wiredbtnmode(char *val)
 }
 __setup("androidboot.wiredbtnaltmode=", set_wiredbtnmode);
 
+int enable_cpuoc = 0;
+static int __init set_cpu_overclock(char *val)
+{
+        unsigned int option;
+
+        get_option(&val, &option);
+
+        switch (option) {
+                case 1:
+                        enable_cpuoc = 1;
+                        pr_info("kernel: CPU is overclocked to 2.2Ghz\n");
+                        break;
+                case 2:
+                        enable_cpuoc = 2;
+                        pr_info("kernel: CPU is overclocked to 2.4Ghz\n");
+                        break;
+                default:
+                        pr_err("Unexpected error in set_cpu_overclock\n");
+                        return -EINVAL;
+                }
+
+        return 0;
+}
+__setup("overclock.cpu=", set_cpu_overclock);
+
+
+int enable_gpuoc = 0;
+static int __init set_gpu_overclock(char *val)
+{
+        unsigned int option;
+
+        get_option(&val, &option);
+        if (option){
+                enable_gpuoc = 1;
+                pr_info("kernel: GPU is overclocked to 585Mhz(Adreno 509) or 750Mhz(Adreno 512)\n");
+        }
+
+        return 0;
+}
+__setup("overclock.gpu=", set_gpu_overclock);
+
+int enable_cpuuc = 0;
+static int __init set_cpu_underclock(char *val)
+{
+        unsigned int option;
+
+        get_option(&val, &option);
+
+        switch (option) {
+                case 1:
+                        enable_cpuuc = 1;
+                        pr_info("kernel: CPU is underclocked to 1.4Ghz\n");
+                        break;
+                case 2:
+                        enable_cpuuc = 2;
+                        pr_info("kernel: CPU is underclocked to 1.8Ghz\n");
+                        break;
+                default:
+                        pr_err("Unexpected error in set_cpu_underclock\n");
+                        return -EINVAL;
+                }
+
+        return 0;
+}
+__setup("underclock.cpu=", set_cpu_underclock);
+
+u64 zram_size = 0;
+static int __init set_zram_resize(char *val)
+{
+    unsigned int option;
+    get_option(&val, &option);
+
+    switch (option) {
+        case 1:
+            zram_size = 1ULL * 1024 * 1024 * 1024; // 1 GB
+            pr_info("Kernel: ZRAM size set to 1GB\n");
+            break;
+        case 2:
+            zram_size = 2ULL * 1024 * 1024 * 1024; // 2 GB
+            pr_info("Kernel: ZRAM size set to 2GB\n");
+            break;
+        case 3:
+            zram_size = 3ULL * 1024 * 1024 * 1024; // 3 GB
+            pr_info("Kernel: ZRAM size set to 3GB\n");
+            break;
+        case 4:
+            zram_size = 4ULL * 1024 * 1024 * 1024; // 4 GB
+            pr_info("Kernel: ZRAM size set to 4GB\n");
+            break;
+        case 5:
+            zram_size = 5ULL * 1024 * 1024 * 1024; // 5 GB
+            pr_info("Kernel: ZRAM size set to 5GB\n");
+            break;
+        case 6:
+            zram_size = 6ULL * 1024 * 1024 * 1024; // 6 GB
+            pr_info("Kernel: ZRAM size set to 6GB\n");
+            break;
+        default:
+            pr_err("Unexpected error in set_zram_resize\n");
+            return -EINVAL;
+    }
+
+    return 0;
+}
+__setup("zram.resize=", set_zram_resize);
+
 /*
  * Used to generate warnings if static_key manipulation functions are used
  * before jump_label_init is called.

@@ -3085,6 +3085,8 @@ static unsigned long init_rate = 300000000;
 static unsigned long osm_clk_init_rate = 200000000;
 static unsigned long pwrcl_boot_rate = 1401600000;
 static unsigned long perfcl_boot_rate = 1747200000;
+extern int enable_cpuoc;
+extern int enable_cpuuc;
 
 static int clk_cpu_osm_driver_probe(struct platform_device *pdev)
 {
@@ -3147,8 +3149,18 @@ static int clk_cpu_osm_driver_probe(struct platform_device *pdev)
 	if (pwrcl_clk.vbases[EFUSE_BASE]) {
 		/* Multiple speed-bins are supported */
 		pte_efuse = readl_relaxed(pwrcl_clk.vbases[EFUSE_BASE]);
+		if (enable_cpuoc == 1) {
+			speedbin = 1; /* Use speedbin 1 with max 2.2Ghz for little cluster */
+		} else if (enable_cpuoc == 2) {
+			speedbin = 0; /* Use speedbin 0 with max 2.4Ghz for little cluster */
+		} else if (enable_cpuuc == 1) {
+			speedbin = 4; /* Use speedbin 4 with max 1.4Ghz for little cluster */
+		} else if (enable_cpuuc == 2) {
+			speedbin = 3; /* Use speedbin 0 with max 1.8Ghz for little cluster */
+		} else {
 		speedbin = ((pte_efuse >> PWRCL_EFUSE_SHIFT) &
 						    PWRCL_EFUSE_MASK);
+		}
 		snprintf(pwrclspeedbinstr, ARRAY_SIZE(pwrclspeedbinstr),
 			 "qcom,pwrcl-speedbin%d-v%d", speedbin, pvs_ver);
 	}
@@ -3166,8 +3178,18 @@ static int clk_cpu_osm_driver_probe(struct platform_device *pdev)
 	if (perfcl_clk.vbases[EFUSE_BASE]) {
 		/* Multiple speed-bins are supported */
 		pte_efuse = readl_relaxed(perfcl_clk.vbases[EFUSE_BASE]);
+		if (enable_cpuoc == 1) {
+			speedbin = 1; /* Use speedbin 1 with max 2.2Ghz for little cluster */
+		} else if (enable_cpuoc == 2) {
+			speedbin = 0; /* Use speedbin 0 with max 2.4Ghz for little cluster */
+		} else if (enable_cpuuc == 1) {
+			speedbin = 4; /* Use speedbin 4 with max 1.4Ghz for little cluster */
+		} else if (enable_cpuuc == 2) {
+			speedbin = 3; /* Use speedbin 0 with max 1.8Ghz for little cluster */
+		} else {
 		speedbin = ((pte_efuse >> PERFCL_EFUSE_SHIFT) &
 							PERFCL_EFUSE_MASK);
+		}
 		snprintf(perfclspeedbinstr, ARRAY_SIZE(perfclspeedbinstr),
 			 "qcom,perfcl-speedbin%d-v%d", speedbin, pvs_ver);
 	}
