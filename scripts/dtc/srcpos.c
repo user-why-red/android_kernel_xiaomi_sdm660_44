@@ -252,7 +252,7 @@ srcpos_string(struct srcpos *pos)
 	const char *fname = "<no-file>";
 	char *pos_str;
 
-	if (pos->file && pos->file->name)
+	if (pos)
 		fname = pos->file->name;
 
 
