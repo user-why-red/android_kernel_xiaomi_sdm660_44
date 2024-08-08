@@ -1,7 +1,7 @@
 
 qcom,m6100atl_4000mah {
 	qcom, = <24>;
-	/* #3826057_LC_8626_VK_59500mAh_averaged_Master_Jan19th2019*/
+	/* #3633204_lc_m6100_atl4000mah_fg_averaged_masterslave_sep25th2018*/
 	qcom,max-voltage-uv = <4400000>;
 	qcom,fastchg-current-ma = <2900>;
 	qcom,fg-cc-cv-threshold-mv = <4390>;
@@ -9,7 +9,7 @@ qcom,m6100atl_4000mah {
 	qcom,batt-id-kohm = <68>;
 	qcom,battery-beta = <4250>;
 	qcom,battery-full-design = <4000>;
-	qcom,battery-type = "3826057_lc_8626_vk_59500mah_averaged_master_jan19th2019";
+	qcom,battery-type = "3633204_lc_m6100_atl4000mah_fg_averaged_masterslave_sep25th2018";
 	qcom,checksum = <0xF71B>;
 	qcom,gui-version = "PM660GUI - 0.0.0.45";
 	qcom,fg-profile-data = [
