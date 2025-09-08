@@ -107,6 +107,21 @@ config LOCALVERSION_AUTO
 
 	  which is done within the script "scripts/setlocalversion".)
 
+config SPOOF_KERNEL_VERSION
+    bool "Spoof kernel version string"
+    default n
+    help
+      If enabled, the kernel will report a fixed build date and banner
+      matching stock.
+
+config SPOOF_KERNEL_VERSION_STRING
+    string "Custom spoofed kernel version string"
+    depends on SPOOF_KERNEL_VERSION
+    default "#1 SMP PREEMPT Wed Jul 15 12:00:00 UTC 2018"
+    help
+      The spoofed kernel version string to display instead of the actual
+      build info.
+
 config HAVE_KERNEL_GZIP
 	bool
 
