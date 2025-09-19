@@ -208,6 +208,12 @@ struct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask,
 	u8 *data;
 	bool pfmemalloc;
 
+	/* Prevent huge or invalid allocations */
+	if (size == 0 || size > KMALLOC_MAX_SIZE) {
+		pr_err("__alloc_skb: invalid allocation size %u\n", size);
+		return NULL;
+	}
+
 	if (IS_ENABLED(CONFIG_FORCE_ALLOC_FROM_DMA_ZONE))
 		gfp_mask |= GFP_DMA;
 
