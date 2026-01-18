@@ -62,8 +62,9 @@ static inline u32 task_get_classid(const struct sk_buff *skb)
 	 * calls by looking at the number of nested bh disable calls because
 	 * softirqs always disables bh.
 	 */
-	if (in_serving_softirq()) {
-		/* If there is an sock_cgroup_classid we'll use that. */
+
+	if (softirq_count()) {
+		/* If there is an sk_classid we'll use that. */
 		if (!skb->sk)
 			return 0;
 
