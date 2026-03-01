@@ -2007,9 +2007,9 @@ static int smb2_chg_config_init(struct smb2 *chip)
 		chip->chg.wa_flags |= BOOST_BACK_WA | QC_AUTH_INTERRUPT_WA_BIT
 				| TYPEC_PBS_WA_BIT;
 		if (pmic_rev_id->rev4 == PMI8998_V1P1_REV4) /* PMI rev 1.1 */
-			chg->wa_flags |= QC_CHARGER_DETECTION_WA_BIT;
+        chg->wa_flags |= QC_CHARGER_DETECTION_WA_BIT;
 		if (pmic_rev_id->rev4 == PMI8998_V2P0_REV4) /* PMI rev 2.0 */
-			chg->wa_flags |= TYPEC_CC2_REMOVAL_WA_BIT;
+        chg->wa_flags |= TYPEC_CC2_REMOVAL_WA_BIT | QC_CHARGER_DETECTION_WA_BIT;
 		chg->chg_freq.freq_5V		= 600;
 		chg->chg_freq.freq_6V_8V	= 800;
 		chg->chg_freq.freq_9V		= 1000;
