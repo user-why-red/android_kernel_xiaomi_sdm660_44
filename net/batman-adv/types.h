@@ -545,7 +545,7 @@ struct batadv_priv_tt {
 	spinlock_t req_list_lock; /* protects req_list */
 	spinlock_t roam_list_lock; /* protects roam_list */
 	unsigned char *last_changeset;
-	s16 last_changeset_len;
+	u16 last_changeset_len;
 	/* protects last_changeset & last_changeset_len */
 	spinlock_t last_changeset_lock;
 	/* prevents from executing a commit while reading the table */
