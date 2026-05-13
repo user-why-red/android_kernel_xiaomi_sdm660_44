@@ -155,7 +155,7 @@ struct batadv_frag_table_entry {
 	spinlock_t lock; /* protects head */
 	unsigned long timestamp;
 	u16 seqno;
-	u16 size;
+	size_t size;
 	u16 total_size;
 };
 
