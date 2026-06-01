@@ -83,6 +83,7 @@
 #include <linux/seq_file.h>
 
 #include <linux/crypto.h>
+#include <crypto/algapi.h>
 #include <linux/scatterlist.h>
 
 int sysctl_tcp_tw_reuse __read_mostly;
@@ -657,7 +658,7 @@ static void tcp_v4_send_reset(const struct sock *sk, struct sk_buff *skb)
 			goto release_sk1;
 
 		genhash = tcp_v4_md5_hash_skb(newhash, key, NULL, skb);
-		if (genhash || memcmp(hash_location, newhash, 16) != 0)
+		if (genhash || crypto_memneq(hash_location, newhash, 16) != 0)
 			goto release_sk1;
 	} else {
 		key = sk ? tcp_md5_do_lookup(sk, (union tcp_md5_addr *)
@@ -1187,7 +1188,7 @@ static bool tcp_v4_inbound_md5_hash(const struct sock *sk,
 				      hash_expected,
 				      NULL, skb);
 
-	if (genhash || memcmp(hash_location, newhash, 16) != 0) {
+	if (genhash || crypto_memneq(hash_location, newhash, 16) != 0) {
 		net_info_ratelimited("MD5 Hash failed for (%pI4, %d)->(%pI4, %d)%s\n",
 				     &iph->saddr, ntohs(th->source),
 				     &iph->daddr, ntohs(th->dest),
