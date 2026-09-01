@@ -51,7 +51,7 @@ union power_supply_propval lct_therm_globe_level = {2,};
 union power_supply_propval lct_therm_india_level = {1,};
 #endif
 
-bool lct_backlight_off;
+bool lct_backlight_off = false;
 int LctIsInCall = 0;
 #if defined (CONFIG_KERNEL_XIAOMI_A26X)
 int LctIsInVideo = 0; 
@@ -2557,7 +2557,7 @@ static int thermal_notifier_callback(struct notifier_block *noti, unsigned long 
 			schedule_work(&chg->fb_notify_work);
 		}
 		else if (event == FB_EVENT_BLANK && *blank == FB_BLANK_POWERDOWN) {
-			lct_backlight_off = true;
+			// lct_backlight_off = true;
 			schedule_work(&chg->fb_notify_work);
 		}
 	}
